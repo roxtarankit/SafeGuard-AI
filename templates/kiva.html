@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Kiva Loan Repayment Prediction</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background-color: #f4f6f9;
+      }
+      .card {
+        border-radius: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      h2,
+      h4 {
+        text-align: center;
+      }
+      .btn-primary {
+        border-radius: 12px;
+      }
+      .result-card {
+        border-radius: 20px;
+        background: #e8f0fe;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+      label {
+        font-weight: 500;
+      }
+    </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="card p-4">
+      <h2 class="mb-3">Kiva Loan Repayment Interval &amp; EMI Prediction</h2>
+
+      <!-- Example placeholders, fill by backend or JS -->
+      {% if pred %}
+      <h4 class="text-primary">Predicted ICU Stay Duration: {{ pred }} Days</h4>
+      {% endif %}
+
+      {% if total_cost %}
+      <h4 class="text-success">
+        Predicted ICU Cost: ${{ total_cost }} / ₹<span id="total_cost_inr"></span>
+      </h4>
+      {% endif %}
+
+      <form method="POST" class="mt-4" id="predictionForm">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label>Funded Amount:</label>
+            <input
+              type="number"
+              step="any"
+              name="funded_amount"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label>Loan Amount:</label>
+            <input
+              type="number"
+              step="any"
+              name="loan_amount"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label>Loan Payback Period (in Months):</label>
+            <input
+              type="number"
+              step="any"
+              name="term_in_months"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label>Possible Lender Count:</label>
+            <input
+              type="number"
+              name="lender_count"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label>Is Borrower Male? (1 = Yes, 0 = No):</label>
+            <input
+              type="number"
+              name="male_count"
+              min="0"
+              max="1"
+              step="1"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label>Is Borrower Female? (1 = Yes, 0 = No):</label>
+            <input
+              type="number"
+              name="female_count"
+              min="0"
+              max="1"
+              step="1"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary mt-3">Predict</button>
+        </div>
+      </form>
+
+      {% if prediction %}
+      <div class="result-card mt-5 text-center">
+        <h5><strong>Predicted Repayment Interval:</strong></h5>
+        <h4 class="text-primary">{{ prediction }}</h4>
+      </div>
+      {% endif %}
+
+      {% if emi %}
+      <div class="result-card mt-3 text-center">
+        <h5><strong>EMI Payment Will Be:</strong></h5>
+        <h4 class="text-success">
+          $<span id="emi_usd">{{ emi }}</span> / ₹<span id="emi_inr"></span>
+        </h4>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    // Define a fixed conversion rate USD -> INR
+    const conversionRate = 83;
+
+    // Function to convert and display rupees values
+    function convertUsdToInr() {
+      // Get the USD emi value from template variable (rendered by backend)
+      const emiUsdSpan = document.getElementById('emi_usd');
+      const emiInrSpan = document.getElementById('emi_inr');
+
+      if (emiUsdSpan && emiUsdSpan.textContent) {
+        const emiUsdValue = parseFloat(emiUsdSpan.textContent);
+        if (!isNaN(emiUsdValue)) {
+          emiInrSpan.textContent = (emiUsdValue * conversionRate).toFixed(2);
+        }
+      }
+
+      // Same for total cost INR (if total_cost is present)
+      const totalCostInrSpan = document.getElementById('total_cost_inr');
+      const totalCostUsdText = "{{ total_cost | default('') }}"; // from backend
+
+      if (totalCostInrSpan && totalCostUsdText) {
+        const totalCostUsdValue = parseFloat(totalCostUsdText);
+        if (!isNaN(totalCostUsdValue)) {
+          totalCostInrSpan.textContent = (totalCostUsdValue * conversionRate).toFixed(2);
+        }
+      }
+    }
+
+    // Run on page load
+    window.onload = convertUsdToInr;
+  </script>
+</body>
+</html>
